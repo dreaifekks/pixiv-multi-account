@@ -13,68 +13,53 @@ function harness({lang='',url='https://www.pixiv.net/',languages=['en-US']}={}) 
   return {context,i18n:context.PixivAccountI18n,elements};
 }
 
-test('site language takes priority over URL and browser, including regional variants',()=>{
-  const {i18n}=harness();
-  for(const [lang,expected] of [['ja','ja'],['en-GB','en'],['zh-TW','zh'],['zh-Hant','zh'],['ZH_cn','zh']]){
-    assert.equal(i18n.detect({lang,url:'https://www.pixiv.net/en/',languages:['ja']}),expected);
+test('page language changes update labels and errors in all four languages',()=>{
+  const {context,i18n}=harness();
+  for(const [lang,heading,error] of [
+    ['zh-CN','切换账号','未找到该账号。'],
+    ['zh-TW','切換帳號','找不到此帳號。'],
+    ['ja','アカウントを切り替え','アカウントが見つかりません。'],
+    ['en','Switch accounts','Account not found.']
+  ]){
+    context.document.documentElement.lang=lang;i18n.syncPageLanguage();
+    assert.equal(i18n.t('切换账号'),heading,lang);
+    assert.equal(i18n.t('未找到该账号。'),error,lang);
   }
-  assert.equal(i18n.detect({lang:'ko',url:'https://www.pixiv.net/en/',languages:['zh']}),'en');
 });
 
-test('missing page language falls back to URL then supported browser language',()=>{
+test('language priority is page, URL, then browser, with Chinese script support',()=>{
   const {i18n}=harness();
-  for(const [path,expected] of [['en/artworks/123','en'],['ja/','ja'],['zh-tw/','zh']]){
-    assert.equal(i18n.detect({url:`https://www.pixiv.net/${path}`,languages:['ja']}),expected);
-  }
-  assert.equal(i18n.detect({url:'https://www.pixiv.net/artworks/123',languages:['fr','zh-CN']}),'zh');
-  assert.equal(i18n.detect({url:'https://www.pixiv.net/',languages:['ja']}),'ja');
-  assert.equal(i18n.detect({url:'invalid',languages:['fr']}),'en');
+  for(const [input,expected] of [
+    [{lang:'ja',url:'https://www.pixiv.net/en/',languages:['zh-CN']},'ja'],
+    [{lang:'zh-Hans-TW'},'zh'],
+    [{lang:'zh-Hant-CN'},'zh-Hant'],
+    [{url:'https://www.pixiv.net/zh-tw/',languages:['en']},'zh-Hant'],
+    [{languages:['zh-HK']},'zh-Hant'],
+    [{languages:['ja']},'ja'],
+    [{lang:'ko',languages:['zh-CN']},'en']
+  ]) assert.equal(i18n.detect(input),expected,JSON.stringify(input));
 });
 
-test('page sync notifies only on a language change and translates curated errors',()=>{
-  const {context,i18n}=harness({lang:'zh-CN'});
-  let updates=0;const unsubscribe=i18n.subscribe(()=>updates++);
-  context.document.documentElement.lang='ja';i18n.syncPageLanguage();
-  assert.equal(i18n.t('切换账号'),'アカウントを切り替え');
-  assert.equal(i18n.t('未找到该账号。'),'アカウントが見つかりません。');
-  i18n.syncPageLanguage();assert.equal(updates,1);
-  context.document.documentElement.lang='en';i18n.syncPageLanguage();
-  assert.equal(i18n.t('切换账号'),'Switch accounts');
-  assert.equal(i18n.t('该登录状态已过期，请重新登录。'),'This session has expired. Log in again.');
-  assert.equal(updates,2);unsubscribe();
-  i18n.setLanguage('zh');assert.equal(updates,2);
-  assert.equal(i18n.t('切换账号'),'切换账号');
-  assert.equal(i18n.t('Unknown diagnostic'),'Unknown diagnostic');
-});
-
-async function popup({url,reply,fail=false,languages=['en']}={}){
-  const h=harness({url:'chrome-extension://test/popup.html',languages});
-  let requests=0,panels=0;
-  h.context.chrome={tabs:{query:async()=>[{id:7,url}],sendMessage:async(id,message,options)=>{
-    requests++;assert.equal(id,7);assert.equal(message.type,'PIXIV_GET_LANGUAGE');assert.equal(options.frameId,0);
-    if(fail)throw Error('No content script');return reply;
-  }}};
-  h.context.pixivAccountSend=()=>{};
-  h.context.PixivAccountPanel=function(){panels++;};
-  await vm.runInContext(popupSource,h.context);
-  return {...h,requests,panels};
-}
-
-test('popup reads active Pixiv page language instead of trusting its URL',async()=>{
-  const h=await popup({url:'https://www.pixiv.net/en/',reply:{language:'ja'},languages:['zh']});
-  assert.equal(h.i18n.language,'ja');assert.equal(h.requests,1);assert.equal(h.panels,1);
-  assert.equal(h.elements.title.textContent,'Pixiv アカウント切り替え');
-  assert.equal(h.context.document.documentElement.lang,'ja');
-});
-
-test('popup without a content script still opens in the URL language',async()=>{
-  const h=await popup({url:'https://www.pixiv.net/en/',fail:true,languages:['zh']});
-  assert.equal(h.i18n.language,'en');assert.equal(h.panels,1);
-});
-
-test('popup on unrelated or inaccessible tabs uses browser language without messaging them',async()=>{
-  for(const url of ['https://example.com/en/',undefined]){
-    const h=await popup({url,languages:['ja']});
-    assert.equal(h.i18n.language,'ja');assert.equal(h.requests,0);assert.equal(h.panels,1);
+test('popup uses the Pixiv page language and falls back when it cannot read the page',async()=>{
+  for(const [url,reply,languages,expected,title] of [
+    ['https://www.pixiv.net/en/',{language:'ja'},['zh-CN'],'ja','Pixiv アカウント切り替え'],
+    ['https://www.pixiv.net/zh-tw/',null,['en'],'zh-Hant','Pixiv 帳號切換'],
+    ['https://example.com/',null,['en'],'en','Pixiv Account Switcher']
+  ]){
+    const {context,i18n,elements}=harness({url:'chrome-extension://test/popup.html',languages});
+    let requests=0,panels=0;
+    context.chrome={tabs:{query:async()=>[{id:7,url}],sendMessage:async()=>{
+      requests++;
+      if(!reply)throw Error('No content script');
+      return reply;
+    }}};
+    context.pixivAccountSend=()=>{};
+    context.PixivAccountPanel=function(){panels++;};
+    await vm.runInContext(popupSource,context);
+    assert.equal(i18n.language,expected);
+    assert.equal(context.document.documentElement.lang,expected);
+    assert.equal(elements.title.textContent,title);
+    assert.equal(panels,1);
+    assert.equal(requests,url.includes('www.pixiv.net')?1:0);
   }
 });

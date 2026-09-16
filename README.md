@@ -1,42 +1,69 @@
-# Pixiv 账号切换 · 0.3.1
+# Pixiv Account Switcher
 
-登录后自动记住账号，之后在 Pixiv 头像菜单里点一下切换。
+**English** · [中文](README.cn.md) · [日本語](README.jp.md)
 
-## 使用
+Switch between accounts you have logged in to, right from Pixiv’s profile menu.
 
-1. 在 Pixiv 正常登录，账号会自动加入列表。
-2. 想加小号时点“添加账号”，在打开的官方页面登录即可。
-3. 登录完成后自动记住小号，不需要点保存或完成。
-4. 点击列表中的账号切换；当前账号旁会显示“当前”。
+Accounts are remembered automatically after login, with no manual save step. Next time you open Pixiv, choose an account and get back to browsing or creating.
 
-添加过程中不想继续，可以点“返回原账号”。所有 Pixiv 标签页共用当前账号，切换后会一起刷新。
+## Features
 
-## 更新
+- **Automatic account saving**: log in to Pixiv as usual and your account appears in the list.
+- **Two ways to switch**: open the account list from Pixiv’s profile menu or the browser toolbar.
+- **Follows the website language**: Simplified Chinese, Traditional Chinese, Japanese and English text adapts to the current Pixiv page.
+- **Local storage**: account details and login sessions stay in the current browser profile, with no cloud sync.
 
-覆盖原加载目录，在 `chrome://extensions` 点击扩展的“重新加载”，然后刷新 Pixiv。沿用原目录即可保留已有账号，不用卸载。由 0.1.x 更新时，如 Chrome 提示允许 Pixiv 访问，完成提示即可。
+## How to use
 
-首次安装：在 Chrome 的扩展管理页打开开发者模式，选择“加载已解压的扩展程序”，选中含有 `manifest.json` 的目录。
+1. Log in to Pixiv and open the profile menu to see your current account.
+2. Click **Add account** and log in to another account on the official Pixiv page that opens.
+3. The new account is added to the list automatically after login.
+4. Click an account to switch to it. The active account is marked **Current**.
 
-头像菜单里的区域跟随 Pixiv 原生面板宽度；也可以通过 Chrome 工具栏打开账号列表。
+You can cancel adding an account with **Return to previous account**. The extension icon in the browser toolbar also opens the account list.
 
-界面支持中文、日语和英语：优先跟随当前 Pixiv 页面的 `lang`，缺失时读取网址语言前缀，再使用浏览器语言；其他网站语言回退为英语。繁体中文暂共用简体中文文案。页面语言改变时，菜单及切换提示同步更新。工具栏弹窗打开时读取当前 Pixiv 标签页的语言；在其他网站打开则使用浏览器语言。
+Pixiv tabs in the same browser profile share one login session. Switching accounts reloads open Pixiv main-site pages. This extension lets you switch between accounts; it does not keep separate accounts signed in simultaneously in different tabs. When a session expires, log in again on Pixiv.
 
-## 这一版
+## Install and update
 
-- 菜单、弹窗及状态提示新增中日英文案，自动跟随当前 Pixiv 页面语言。
+Requires **Chrome 124 or later**. Incognito mode is not supported.
 
-- 登录 Cookie 变化时在后台自动识别、记录账号，不依赖面板是否打开。
-- 页面打开时补充识别当前登录，已有账号更新会话，新账号加入列表。
-- 添加后的登录自动结束添加流程，不再需要保存或完成按钮。
-- 界面保留账号列表、当前标记和添加入口；只有操作失败时才显示简短提示。
+1. Download `pixiv-multi-account-VERSION.zip` from [Releases](https://github.com/dreaifekks/pixiv-multi-account/releases/latest) and extract it.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Click **Load unpacked** and select the directory containing `manifest.json`.
+4. Reload any open Pixiv pages.
 
-## 开发
+To update, replace the files in the original extension directory, click **Reload** on the extension management page, and reload Pixiv. Keep the same directory and extension installation to retain saved accounts; there is no need to uninstall. Allow Pixiv site access if Chrome prompts you.
 
-### 自动打包
+## Interface language
 
-仅推送以 `v` 开头且与扩展版本一致的标签（例如 `v0.3.1`）时，GitHub Actions 才会先运行测试，再生成扩展 ZIP 并发布到 [GitHub Releases](https://github.com/dreaifekks/pixiv-multi-account/releases)。在对应版本的 **Assets** 下载 `pixiv-multi-account-版本号.zip`，解压后按上面的首次安装或更新方式加载。Actions Artifacts 同时保留一份产物，保留 30 天。
+The extension prefers the current Pixiv page’s language. If unavailable, it checks the language in the URL, then the browser language. The menu and switching message update when the page language changes.
 
-本地打包只需要 Node.js 24 和 npm：
+The toolbar popup reads the current Pixiv tab’s language when opened. On other websites, it uses the browser language. Simplified and Traditional Chinese each have their own translations. Unsupported site languages use English.
+
+## Privacy and permissions
+
+The extension stores account IDs, display names, avatar URLs and login sessions locally to display and switch accounts. It does not read or store passwords, use analytics, or upload data to a developer-operated server. Account verification connects directly to Pixiv, and avatars load from Pixiv’s image servers.
+
+| Permission | Purpose |
+| --- | --- |
+| `cookies` | Read and restore Pixiv login cookies to switch accounts. |
+| `storage` | Store accounts, sessions and recovery records for failed operations locally. |
+| Pixiv site access | Verify account identity, access the relevant cookies and display the switcher on Pixiv’s main site. |
+
+Host permissions cover only `pixiv.net`, `www.pixiv.net` and `accounts.pixiv.net`. Account verification requests, login pages and cookie restoration use HTTPS.
+
+This is an independently developed, unofficial extension with no affiliation with Pixiv.
+
+## Support
+
+If the account list is out of date, click **Refresh**. If switching stops working after an extension update, reload all open Pixiv pages and try again.
+
+For other problems, open a [GitHub Issue](https://github.com/dreaifekks/pixiv-multi-account/issues) with your Chrome version, extension version, page language and steps to reproduce. Do not include cookies or login session values.
+
+## Development
+
+Uses Chrome Manifest V3 with no compilation step or runtime dependencies. Testing and packaging require Node.js 24 and npm:
 
 ```sh
 npm ci
@@ -44,18 +71,8 @@ npm test
 npm run package
 ```
 
-输出为 `dist/pixiv-multi-account-版本号.zip`，版本取自 `manifest.json`，并检查与 `package.json` 一致。ZIP 根目录直接包含 `manifest.json` 和根目录的 JS、HTML、CSS 运行文件，不包含测试、开发脚本或本地记录。新增资源子目录时，需要同步更新 `scripts/package.mjs`。`fflate` 仅作为开发依赖生成 ZIP，不会打入扩展。
+The package is written to `dist/pixiv-multi-account-VERSION.zip`. Versions in `manifest.json` and `package.json` must match. `fflate` is used only for packaging and is not shipped with the extension. Update `scripts/package.mjs` when adding resource subdirectories.
 
-### 实现与测试
+Pushing a `v*` tag matching the version, such as `v0.3.2`, triggers tests, packaging and publication of a GitHub Release. Ordinary branch pushes do not trigger packaging.
 
-没有构建步骤或运行时依赖。使用 Chrome Manifest V3，权限为 `cookies`、`storage` 和三个精确域名 `pixiv.net`、`www.pixiv.net`、`accounts.pixiv.net` 的 HTTP/HTTPS 访问。网络核验、登录页和 Cookie 写回使用 HTTPS。
-
-会话以 `PHPSESSID` 为基础，记录在 `chrome.storage.local`。读取实际用户身份后按用户 ID 归档，不存密码、不上传第三方服务。识别失败不会覆盖已有账号；切换失败会尝试恢复原会话。
-
-```powershell
-node --test tests/*.test.mjs
-```
-
-自动化测试覆盖登录后自动记录、无需面板的 Cookie 事件、自动完成添加、首次页面同步、权限过滤、失效会话、切换与回滚等。`tests/preview.html` 为合成账号的交互演示。
-
-已完成自动化和本地界面验证。当前工具禁止访问 Pixiv，尚未完成真实账号端到端验证。
+Automated tests cover account identification, adding accounts, switching and rollback, permission checks and language detection. `tests/preview.html` provides a synthetic-account demo with controls for language, light/dark themes and panel width.
