@@ -1,0 +1,45 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pixiv 账号切换 · 本地模拟预览</title><style>
+*{box-sizing:border-box}html{color-scheme:dark}body{margin:0;background:#161719;color:#dedee2;font:15px/1.6 system-ui,"Microsoft YaHei",sans-serif}header{height:80px;border-bottom:1px solid #ffffff0b;display:flex;align-items:center;gap:24px;padding:0 32px;background:#1f1f21}header .logo{font-size:29px;font-weight:800;color:#0096fa;letter-spacing:-1px}header .search{flex:1;max-width:450px;background:#303033;border-radius:24px;padding:11px 22px;color:#999;font-size:13px}header .spacer{flex:1}button{cursor:pointer}.avatar-button{width:43px;height:43px;border:2px solid #aaa;border-radius:50%;background:linear-gradient(135deg,#ffd78e,#699f86);color:#163e36;font-size:22px}.intro{padding:76px 44px;max-width:calc(100% - 370px)}.eyebrow{font-size:12px;color:#0096fa;letter-spacing:2px}.intro h1{font-size:38px;line-height:1.4;margin:18px 0;color:#f7f7f8;font-weight:650}.intro p{font-size:15px;color:#a3a4ab;max-width:480px;line-height:1.9}.steps{margin-top:34px;display:flex;flex-direction:column;gap:18px}.step{display:flex;gap:14px;align-items:center;font-size:14px}.number{width:26px;height:26px;border-radius:50%;background:#0096fa20;color:#49b5ff;display:grid;place-items:center;font-size:12px}.notice{margin-top:40px;font-size:12px;color:#929399;padding:14px;border-left:2px solid #444;background:#ffffff04;max-width:480px}.menu{position:absolute;right:28px;top:90px;width:304px;border:1px solid #3b3b3e;border-radius:14px;background:#202022;padding:24px;color:#d1d1d6;box-shadow:0 20px 70px #0003}.profile{padding:0 0 17px}.large-avatar{width:64px;height:64px;background:linear-gradient(135deg,#ffd78e,#699f86);border-radius:50%;display:grid;place-items:center;color:#16463d;font-size:30px;font-weight:650}.profile h2{font-size:21px;margin:8px 0 0;color:#eee}.handle{font-size:13px;color:#999}.stats{display:flex;gap:30px;font-size:13px;color:#999;margin-top:12px}.stats b{color:#ddd}.menu>a{display:block;color:inherit;text-decoration:none;font-size:15px;padding:11px 7px;border-radius:8px}.menu>a:hover{background:#ffffff07}.menu hr{border:0;border-top:1px solid #ffffff10;margin:12px 0}.demo-controls{position:fixed;left:44px;bottom:24px;display:flex;gap:8px}.demo-controls button{background:#292a2e;border:1px solid #45454b;border-radius:8px;color:#ddd;padding:8px 12px;font:12px system-ui}@media(max-width:740px){.intro{display:none}.menu{right:calc(50% - 152px)}.demo-controls{left:12px;bottom:8px}}
+.light .intro h1,.light .profile h2,.light .stats b{color:#262931}.light .intro,.light .step{color:#424650}.light .intro p{color:#636974}.light .notice{background:#00000004;border-color:#ccc;color:#667}.light .menu{box-shadow:0 20px 70px #0001}
+.nav-shell{padding:0 12px}.nav-items{max-width:220px;margin:auto}.nav-items>a{display:block;color:inherit;text-decoration:none;font-size:15px;padding:11px 7px;border-radius:8px}.demo-controls{z-index:2147483001;flex-wrap:wrap;max-width:550px}.menu{max-width:calc(100vw - 40px)}@media(max-width:740px){.menu{right:20px}}.layout-check{position:fixed;left:12px;bottom:84px;z-index:2147483001;max-width:500px;background:#122c22;color:#a6efd1;padding:7px 12px;border-radius:8px;font-size:12px}
+</style></head><body>
+<header><span class="logo">pixiv</span><div class="search">搜索作品</div><span class="spacer"></span><span>投稿 ▾</span><span>✉</span><button class="avatar-button" id="toggle" aria-label="打开头像菜单">青</button></header>
+<main class="intro"><div class="eyebrow">PIXIV ACCOUNT SWITCHER</div><h1>登录后记住，<br>点一下切换。</h1><p>账号自动加入头像菜单。<br>以后直接选择想用的那个。</p><div class="steps"><div class="step"><span class="number">1</span>登录主账号，自动加入列表</div><div class="step"><span class="number">2</span>添加账号，在官方页面完成登录</div><div class="step"><span class="number">3</span>选择账号，页面刷新后继续浏览</div></div><div class="notice">本地模拟演示 · 使用合成账号。</div></main>
+<aside class="menu" id="demo-menu"><div class="profile"><div class="large-avatar">青</div><h2 id="profile-name">青空 · 主账号</h2><div class="handle">@demo_main</div><div class="stats"><span><b>49</b> 已关注</span><span><b>3</b> 粉丝</span></div></div><div class="nav-shell"><nav class="nav-items"><a href="#dashboard">数据分析</a><a href="#works">我的作品</a><a href="#bookmarks">收藏</a><a href="#history">浏览记录</a><hr><a href="#settings">设置</a><a href="#logout">退出登录</a></nav></div></aside>
+<div class="layout-check" id="layout-check" role="status">等待布局测量…</div>
+<div class="demo-controls"><button id="theme">切换明暗</button><button id="simulate-login">模拟完成官方登录</button><button id="simulate-failure">下次切换模拟失败</button><button id="simulate-unsaved">模拟未保存当前账号</button><button id="simulate-logout">模拟退出登录</button><button id="width-narrow">面板 280px</button><button id="width-wide">面板 480px</button><button id="width-fluid">面板 60vw</button></div>
+<script>
+const state={currentId:'10001',accounts:[{id:'10001',name:'青空 · 主账号',avatar:'',savedAt:Date.now(),expired:false},{id:'10002',name:'夜航 · 小号',avatar:'',savedAt:Date.now(),expired:false}],pending:null};let failure=false,verifiedId=null;
+const listeners=[];
+const user=id=>({id,name:({'10001':'青空 · 主账号','10002':'夜航 · 小号','10003':'新账号 · 演示'})[id]||'演示账号',avatar:''});
+const notify=()=>{if(state.currentId){saveCurrent();verifiedId=state.currentId;state.pending=null;}listeners.forEach(fn=>fn({type:'PIXIV_SESSION_CHANGED'},{},()=>{}));};
+function saveCurrent(){if(state.currentId&&!state.accounts.some(a=>a.id===state.currentId))state.accounts.push({...user(state.currentId),savedAt:Date.now(),expired:false});}
+globalThis.chrome={runtime:{sendMessage:async m=>{
+  if(m.type!=='PIXIV_ACCOUNTS')return;
+  await new Promise(r=>setTimeout(r,120));
+  if(m.action==='CHECK'||m.action==='SYNC'){verifiedId=state.currentId;saveCurrent();if(state.currentId)state.pending=null;}
+  if(m.action==='SAVE')saveCurrent();
+  if(m.action==='SWITCH'){
+    if(failure){failure=false;return {ok:false,error:'模拟：目标登录已失效，已恢复原账号。'};}
+    state.currentId=m.id;verifiedId=m.id;
+  }
+  if(m.action==='ADD'){saveCurrent();state.pending={sourceId:state.currentId};state.currentId=null;verifiedId=null;}
+  if(m.action==='COMPLETE'){
+    if(!state.currentId)return {ok:false,error:'请先点击左下角“模拟完成官方登录”。'};
+    saveCurrent();state.pending=null;verifiedId=state.currentId;
+  }
+  if(m.action==='CANCEL'){state.currentId=state.pending.sourceId;state.pending=null;verifiedId=state.currentId;}
+  document.getElementById('profile-name').textContent=state.currentId?user(state.currentId).name:'未登录（模拟）';
+  state.current=state.currentId?{...user(state.currentId),status:verifiedId===state.currentId?'verified':'detected',hasSession:true}:{status:'absent',id:null,hasSession:false};
+  return {ok:true,data:structuredClone(state)};
+},onMessage:{addListener:fn=>listeners.push(fn)}}};
+document.getElementById('toggle').onclick=()=>{const menu=document.getElementById('demo-menu');menu.hidden=!menu.hidden;};
+document.getElementById('simulate-login').onclick=()=>{state.currentId='10003';verifiedId=null;notify();};
+document.getElementById('simulate-unsaved').onclick=()=>{state.accounts=state.accounts.filter(a=>a.id!==state.currentId);notify();};
+document.getElementById('simulate-logout').onclick=()=>{state.currentId=null;verifiedId=null;notify();};
+document.getElementById('simulate-failure').onclick=()=>{failure=true;};
+for(const [id,width]of [['width-narrow','280px'],['width-wide','480px'],['width-fluid','60vw']])document.getElementById(id).onclick=()=>{document.getElementById('demo-menu').style.width=width;};
+function measureLayout(){const panel=document.getElementById('demo-menu'),host=panel.querySelector('[data-pixiv-account-switcher]'),section=host?.shadowRoot?.querySelector('.box');if(!section||panel.hidden)return;const p=panel.getBoundingClientRect(),b=section.getBoundingClientRect();const pass=Math.abs(b.width-panel.clientWidth)<.75&&Math.abs(b.left-(p.left+panel.clientLeft))<.75;const msg=`${pass?'通过':'未对齐'}：原生面板内宽 ${panel.clientWidth}px · 切换区域 ${Math.round(b.width)}px · 左边差 ${Math.round(b.left-p.left-panel.clientLeft)}px`;const output=document.getElementById('layout-check');if(output.textContent!==msg)output.textContent=msg;output.style.background=pass?'#122c22':'#592323';}
+const layoutObserver=new ResizeObserver(()=>requestAnimationFrame(()=>requestAnimationFrame(measureLayout)));layoutObserver.observe(document.getElementById('demo-menu'));
+document.getElementById('theme').onclick=()=>{const light=document.documentElement.style.colorScheme!=='light';document.documentElement.style.colorScheme=light?'light':'dark';document.body.classList.toggle('light',light);document.body.style.background=light?'#f6f7f8':'';const m=document.getElementById('demo-menu');m.style.background=light?'#fff':'';m.style.color=light?'#333':'';};
+</script><script src="../ui.js"></script><script src="../content.js"></script></body></html>
