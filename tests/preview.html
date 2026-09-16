@@ -7,7 +7,7 @@
 <main class="intro"><div class="eyebrow">PIXIV ACCOUNT SWITCHER</div><h1>登录后记住，<br>点一下切换。</h1><p>账号自动加入头像菜单。<br>以后直接选择想用的那个。</p><div class="steps"><div class="step"><span class="number">1</span>登录主账号，自动加入列表</div><div class="step"><span class="number">2</span>添加账号，在官方页面完成登录</div><div class="step"><span class="number">3</span>选择账号，页面刷新后继续浏览</div></div><div class="notice">本地模拟演示 · 使用合成账号。</div></main>
 <aside class="menu" id="demo-menu"><div class="profile"><div class="large-avatar">青</div><h2 id="profile-name">青空 · 主账号</h2><div class="handle">@demo_main</div><div class="stats"><span><b>49</b> 已关注</span><span><b>3</b> 粉丝</span></div></div><div class="nav-shell"><nav class="nav-items"><a href="#dashboard">数据分析</a><a href="#works">我的作品</a><a href="#bookmarks">收藏</a><a href="#history">浏览记录</a><hr><a href="#settings">设置</a><a href="#logout">退出登录</a></nav></div></aside>
 <div class="layout-check" id="layout-check" role="status">等待布局测量…</div>
-<div class="demo-controls"><button id="theme">切换明暗</button><button id="simulate-login">模拟完成官方登录</button><button id="simulate-failure">下次切换模拟失败</button><button id="simulate-unsaved">模拟未保存当前账号</button><button id="simulate-logout">模拟退出登录</button><button id="width-narrow">面板 280px</button><button id="width-wide">面板 480px</button><button id="width-fluid">面板 60vw</button></div>
+<div class="demo-controls"><button id="language">中文 / 日本語 / English</button><button id="theme">切换明暗</button><button id="simulate-login">模拟完成官方登录</button><button id="simulate-failure">下次切换模拟失败</button><button id="simulate-unsaved">模拟未保存当前账号</button><button id="simulate-logout">模拟退出登录</button><button id="width-narrow">面板 280px</button><button id="width-wide">面板 480px</button><button id="width-fluid">面板 60vw</button></div>
 <script>
 const state={currentId:'10001',accounts:[{id:'10001',name:'青空 · 主账号',avatar:'',savedAt:Date.now(),expired:false},{id:'10002',name:'夜航 · 小号',avatar:'',savedAt:Date.now(),expired:false}],pending:null};let failure=false,verifiedId=null;
 const listeners=[];
@@ -33,6 +33,7 @@ globalThis.chrome={runtime:{sendMessage:async m=>{
   state.current=state.currentId?{...user(state.currentId),status:verifiedId===state.currentId?'verified':'detected',hasSession:true}:{status:'absent',id:null,hasSession:false};
   return {ok:true,data:structuredClone(state)};
 },onMessage:{addListener:fn=>listeners.push(fn)}}};
+document.getElementById('language').onclick=()=>{const langs=['zh-CN','ja','en'];document.documentElement.lang=langs[(langs.indexOf(document.documentElement.lang)+1)%langs.length];};
 document.getElementById('toggle').onclick=()=>{const menu=document.getElementById('demo-menu');menu.hidden=!menu.hidden;};
 document.getElementById('simulate-login').onclick=()=>{state.currentId='10003';verifiedId=null;notify();};
 document.getElementById('simulate-unsaved').onclick=()=>{state.accounts=state.accounts.filter(a=>a.id!==state.currentId);notify();};
@@ -42,4 +43,4 @@ for(const [id,width]of [['width-narrow','280px'],['width-wide','480px'],['width-
 function measureLayout(){const panel=document.getElementById('demo-menu'),host=panel.querySelector('[data-pixiv-account-switcher]'),section=host?.shadowRoot?.querySelector('.box');if(!section||panel.hidden)return;const p=panel.getBoundingClientRect(),b=section.getBoundingClientRect();const pass=Math.abs(b.width-panel.clientWidth)<.75&&Math.abs(b.left-(p.left+panel.clientLeft))<.75;const msg=`${pass?'通过':'未对齐'}：原生面板内宽 ${panel.clientWidth}px · 切换区域 ${Math.round(b.width)}px · 左边差 ${Math.round(b.left-p.left-panel.clientLeft)}px`;const output=document.getElementById('layout-check');if(output.textContent!==msg)output.textContent=msg;output.style.background=pass?'#122c22':'#592323';}
 const layoutObserver=new ResizeObserver(()=>requestAnimationFrame(()=>requestAnimationFrame(measureLayout)));layoutObserver.observe(document.getElementById('demo-menu'));
 document.getElementById('theme').onclick=()=>{const light=document.documentElement.style.colorScheme!=='light';document.documentElement.style.colorScheme=light?'light':'dark';document.body.classList.toggle('light',light);document.body.style.background=light?'#f6f7f8':'';const m=document.getElementById('demo-menu');m.style.background=light?'#fff':'';m.style.color=light?'#333':'';};
-</script><script src="../ui.js"></script><script src="../content.js"></script></body></html>
+</script><script src="../i18n.js"></script><script src="../ui.js"></script><script src="../content.js"></script></body></html>

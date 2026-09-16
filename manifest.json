@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Pixiv 账号切换",
   "description": "在 Pixiv 头像菜单中保存和切换账号。登录状态仅保存在此浏览器的本地扩展存储中。",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "minimum_chrome_version": "124",
   "permissions": ["cookies", "storage"],
   "host_permissions": ["*://pixiv.net/*", "*://www.pixiv.net/*", "*://accounts.pixiv.net/*"],
@@ -10,7 +10,7 @@
   "action": { "default_title": "Pixiv 账号切换", "default_popup": "popup.html" },
   "content_scripts": [{
     "matches": ["https://www.pixiv.net/*"],
-    "js": ["ui.js", "content.js"],
+    "js": ["i18n.js", "ui.js", "content.js"],
     "run_at": "document_idle"
   }],
   "incognito": "not_allowed"

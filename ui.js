@@ -13,7 +13,17 @@
     .status{font-size:12px;margin-top:9px;white-space:pre-wrap;line-height:1.7}.status:empty{display:none}.status.error{color:light-dark(#a42626,#ffacac)}
     button:disabled{opacity:.5;cursor:wait}.empty{font-size:12px;opacity:.7;padding:5px 0 9px}.tools{display:flex;gap:8px;align-items:center}.refresh{border:0;background:none;font-size:12px;color:#0096fa;padding:2px}
   `;
+  const {t}=PixivAccountI18n;
   const panels=new Set();
+  PixivAccountI18n.subscribe(()=>{
+    for(const panel of panels){
+      if(!panel.host.isConnected){panels.delete(panel);continue;}
+      panel.localize();
+      const status=panel.currentStatus;
+      if(panel.state){panel.render();if(status)panel.status(...status);}
+      else if(panel.initialError)panel.renderFailure(panel.initialError);
+    }
+  });
   function refreshPanels(){for(const panel of panels){if(!panel.host.isConnected)panels.delete(panel);else panel.refresh();}}
   chrome.runtime.onMessage.addListener(message=>{if(message?.type==='PIXIV_SESSION_CHANGED')refreshPanels();});
   window.addEventListener('focus',refreshPanels);
@@ -24,10 +34,19 @@
       this.host = host; this.send = send; this.options = options; this.busy = false;
       this.root = host.attachShadow({mode:'open'});
       const style = element('style'); style.textContent = CSS; this.root.append(style);
-      this.box = element('section','box'); this.box.setAttribute('aria-label','Pixiv 账号切换'); this.root.append(this.box);
+      this.box = element('section','box'); this.localize(); this.root.append(this.box);
       for(const panel of panels)if(!panel.host.isConnected)panels.delete(panel);
       panels.add(this);
       this.refresh();
+    }
+    localize() {
+      this.box.setAttribute('aria-label',t('Pixiv 账号切换'));
+      this.box.lang=PixivAccountI18n.language;
+    }
+    renderFailure(message) {
+      this.initialError=message;
+      this.box.replaceChildren(element('p','status error',t(message)));
+      this.box.append(this.button('重试','secondary',()=>this.refresh()));
     }
     async refresh(force=false) {
       if(this.busy||this.refreshing){this.refreshPending=true;return;}
@@ -40,7 +59,7 @@
           this.state=await this.send('CHECK');this.render();
         }
       }
-      catch(e) { refreshError=e.message;if(!this.state){this.box.replaceChildren(element('p','status error',e.message)); const b=this.button('重试','secondary',()=>this.refresh()); this.box.append(b);} }
+      catch(e) { refreshError=e.message;if(!this.state)this.renderFailure(e.message); }
       finally {
         this.refreshing=false;
         // Apply the current permission/pending state, instead of blindly enabling
@@ -49,8 +68,8 @@
         if(this.refreshPending){this.refreshPending=false;queueMicrotask(()=>this.refresh());}
       }
     }
-    button(text, cls, handler) { const b = element('button',cls,text); b.type='button'; b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(e.isTrusted)handler();}); return b; }
-    status(message, error=false) { this.message.textContent = message; this.message.className = `status${error?' error':''}`; }
+    button(text, cls, handler) { const b = element('button',cls,t(text)); b.type='button'; b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();if(e.isTrusted)handler();}); return b; }
+    status(message, error=false) { this.currentStatus=[message,error]; this.message.textContent = t(message); this.message.className = `status${error?' error':''}`; }
     async act(action, id) {
       if (this.busy||this.refreshing) return;
       this.busy = true;
@@ -66,25 +85,25 @@
       finally{if(this.refreshPending){this.refreshPending=false;queueMicrotask(()=>this.refresh());}}
     }
     render() {
-      const s=this.state;this.box.replaceChildren();
-      const heading=element('div','heading');heading.append(element('strong','', '切换账号'));
+      const s=this.state;this.currentStatus=null;this.box.replaceChildren();
+      const heading=element('div','heading');heading.append(element('strong','', t('切换账号')));
       heading.append(this.button('刷新','refresh',()=>this.refresh(true)));this.box.append(heading);
       const live=s.current||{status:'detected',hasSession:!!s.currentId,id:s.currentId};
       const verified=live.status==='verified';
       const accessMissing=live.status==='permission_required';
-      if(accessMissing)this.box.append(element('p','empty','请重新加载扩展并允许 Pixiv 访问。'));
-      else if(live.status==='unverified')this.box.append(element('p','empty','暂时无法读取账号，点击刷新重试。'));
+      if(accessMissing)this.box.append(element('p','empty',t('请重新加载扩展并允许 Pixiv 访问。')));
+      else if(live.status==='unverified')this.box.append(element('p','empty',t('暂时无法读取账号，点击刷新重试。')));
       const list=element('div','accounts');
       for(const a of s.accounts) {
         const current=verified&&a.id===live.id;
-        const row=this.button('','account'+(current?' current':''),()=>this.act('SWITCH',a.id));row.setAttribute('aria-label',`${a.name}，${current?'当前账号':'切换到此账号'}`);row.setAttribute('aria-current',String(current));
+        const row=this.button('','account'+(current?' current':''),()=>this.act('SWITCH',a.id));row.setAttribute('aria-label',`${a.name}, ${t(current?'当前账号':'切换到此账号')}`);row.setAttribute('aria-current',String(current));
         let av=element('span','avatar',a.name.slice(0,1));
         if(a.avatar){const img=element('img','avatar');img.src=a.avatar;img.alt='';img.referrerPolicy='no-referrer';img.addEventListener('error',()=>img.replaceWith(av),{once:true});row.append(img);}else row.append(av);
         const info=element('div','info');info.append(element('div','name',a.name),element('div','id',`ID ${a.id}`));row.append(info);
-        row.append(element('span','badge'+(a.expired?' expired':''),current?'当前':a.expired?'需重新登录':'切换'));
+        row.append(element('span','badge'+(a.expired?' expired':''),t(current?'当前':a.expired?'需重新登录':'切换')));
         if(s.pending||accessMissing)row.disabled=true;list.append(row);
       }
-      if(!s.accounts.length)list.append(element('p','empty',live.hasSession?'正在读取账号…':'登录后会自动出现在这里。'));
+      if(!s.accounts.length)list.append(element('p','empty',t(live.hasSession?'正在读取账号…':'登录后会自动出现在这里。')));
       this.box.append(list);this.actions=element('div','actions');
       if(s.pending){
         this.actions.append(this.button('返回原账号','secondary',()=>this.act('CANCEL')));

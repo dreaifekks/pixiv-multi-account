@@ -75,6 +75,7 @@
     for(const [key,value]of Object.entries(vars))if(inlineHost.style.getPropertyValue(key)!==value)inlineHost.style.setProperty(key,value);
   }
   function update() {
+    PixivAccountI18n.syncPageLanguage();
     const container=menu();
     if(container){
       if(!inlineHost?.isConnected||!container.contains(inlineHost)){
@@ -93,13 +94,21 @@
   window.addEventListener('resize',scheduleLayout,{passive:true});
   function unfreeze(){overlay?.remove();overlay=null;}
   chrome.runtime.onMessage.addListener((m,_sender,respond)=>{
+    if(m?.type==='PIXIV_GET_LANGUAGE'){
+      respond({language:PixivAccountI18n.pageLanguage()});return;
+    }
     if(m?.type==='PIXIV_FREEZE'){
       if(document.querySelector('input:focus,textarea:focus,[contenteditable="true"]:focus')){respond({ready:false});return;}
       unfreeze();overlay=document.createElement('div');overlay.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#111e;color:white;display:grid;place-items:center;font:16px sans-serif;pointer-events:auto;';
-      overlay.textContent='正在切换 Pixiv 账号，请稍候…';document.documentElement.append(overlay);
+      overlay.textContent=PixivAccountI18n.t('正在切换 Pixiv 账号，请稍候…');overlay.lang=PixivAccountI18n.language;document.documentElement.append(overlay);
       document.activeElement?.blur();respond({ready:true});
     }else if(m?.type==='PIXIV_THAW'){unfreeze();respond({ready:true});}
   });
+  PixivAccountI18n.subscribe(()=>{
+    if(overlay){overlay.textContent=PixivAccountI18n.t('正在切换 Pixiv 账号，请稍候…');overlay.lang=PixivAccountI18n.language;}
+  });
+  new MutationObserver(()=>PixivAccountI18n.syncPageLanguage()).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
+  window.addEventListener('popstate',()=>PixivAccountI18n.syncPageLanguage());
   // Coalesce subtree changes; never mutate the observed DOM on every callback.
   new MutationObserver(()=>{clearTimeout(timer);timer=setTimeout(update,180);}).observe(document.body,{childList:true,subtree:true});
   document.addEventListener('click',()=>{clearTimeout(timer);timer=setTimeout(update,120);},true);
