@@ -34,7 +34,7 @@
 
 ### 自动打包
 
-仅推送以 `v` 开头的版本标签（例如 `v0.3.0`）时，GitHub Actions 才会先运行测试，再生成扩展 ZIP。成功后在 **Actions → Package extension** 对应运行的 **Artifacts** 下载 `pixiv-multi-account-版本号.zip`，产物保留 30 天。解压后按上面的首次安装或更新方式加载。
+仅推送以 `v` 开头且与扩展版本一致的标签（例如 `v0.3.1`）时，GitHub Actions 才会先运行测试，再生成扩展 ZIP 并发布到 [GitHub Releases](https://github.com/dreaifekks/pixiv-multi-account/releases)。在对应版本的 **Assets** 下载 `pixiv-multi-account-版本号.zip`，解压后按上面的首次安装或更新方式加载。Actions Artifacts 同时保留一份产物，保留 30 天。
 
 本地打包只需要 Node.js 24 和 npm：
 
