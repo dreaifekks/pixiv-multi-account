@@ -28,6 +28,22 @@
 
 ## 开发
 
+### 自动打包
+
+仅推送以 `v` 开头的版本标签（例如 `v0.3.0`）时，GitHub Actions 才会先运行测试，再生成扩展 ZIP。成功后在 **Actions → Package extension** 对应运行的 **Artifacts** 下载 `pixiv-multi-account-版本号.zip`，产物保留 30 天。解压后按上面的首次安装或更新方式加载。
+
+本地打包只需要 Node.js 24 和 npm：
+
+```sh
+npm ci
+npm test
+npm run package
+```
+
+输出为 `dist/pixiv-multi-account-版本号.zip`，版本取自 `manifest.json`，并检查与 `package.json` 一致。ZIP 根目录直接包含 `manifest.json` 和根目录的 JS、HTML、CSS 运行文件，不包含测试、开发脚本或本地记录。新增资源子目录时，需要同步更新 `scripts/package.mjs`。`fflate` 仅作为开发依赖生成 ZIP，不会打入扩展。
+
+### 实现与测试
+
 没有构建步骤或运行时依赖。使用 Chrome Manifest V3，权限为 `cookies`、`storage` 和三个精确域名 `pixiv.net`、`www.pixiv.net`、`accounts.pixiv.net` 的 HTTP/HTTPS 访问。网络核验、登录页和 Cookie 写回使用 HTTPS。
 
 会话以 `PHPSESSID` 为基础，记录在 `chrome.storage.local`。读取实际用户身份后按用户 ID 归档，不存密码、不上传第三方服务。识别失败不会覆盖已有账号；切换失败会尝试恢复原会话。

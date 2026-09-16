@@ -1,4 +1,6 @@
 node_modules/
+dist/
+.packaging-plan/
 coverage/
 .cache/
 *.log
